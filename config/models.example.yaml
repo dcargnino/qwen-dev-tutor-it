@@ -1,0 +1,38 @@
+models:
+  - name: qwen-hosted
+    provider: alibaba-model-studio
+    description: Hosted Qwen via endpoint OpenAI-compatible
+    api_key_env: QWEN_API_KEY
+    base_url: https://dashscope-intl.aliyuncs.com/compatible-mode
+    model: qwen-plus
+
+  - name: qwen-local-ollama
+    provider: ollama-local
+    description: Qwen locale esposto da Ollama tramite endpoint OpenAI-compatible
+    api_key_env: QWEN_API_KEY
+    base_url: http://localhost:11434
+    model: qwen2.5-coder:7b
+    allow_empty_api_key: true
+
+  - name: qwen-local-vllm
+    provider: vllm-local
+    description: Qwen locale servito con vLLM
+    api_key_env: QWEN_API_KEY
+    base_url: http://localhost:8001
+    model: Qwen/Qwen2.5-Coder-7B-Instruct
+    allow_empty_api_key: true
+
+  - name: qwen-coder
+    provider: alibaba-model-studio
+    description: Variante orientata al coding
+    api_key_env: QWEN_API_KEY
+    base_url: https://dashscope-intl.aliyuncs.com/compatible-mode
+    model: qwen-coder-plus
+
+  - name: qwen-vision-placeholder
+    provider: future-vision
+    description: Placeholder per modelli multimodali/vision
+    api_key_env: QWEN_API_KEY
+    base_url: https://example.invalid/compatible-mode
+    model: qwen-vl-placeholder
+
