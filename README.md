@@ -10,6 +10,10 @@
 
 > Un progetto open-source per portare Qwen dentro la developer education italiana con un approccio pratico, accessibile e pronto per workshop, community meetup e storytelling tecnico.
 
+![Qwen model offering](assets/Qwen3.7-Max-June22.png)
+
+> Una panoramica visiva dell'offerta Qwen, utile per contestualizzare la varietà della famiglia di modelli e il potenziale del progetto.
+
 ## Che cos'e' Qwen
 
 Qwen non e' un solo modello.
