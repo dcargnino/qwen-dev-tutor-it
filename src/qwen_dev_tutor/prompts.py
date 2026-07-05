@@ -15,6 +15,34 @@ TUTOR_SYSTEM_PROMPT = (
 )
 
 
+
+VISION_SYSTEM_PROMPT = (
+    "Sei Qwen, un assistente con capacita' multimodali. "
+    "Analizza l'immagine ricevuta e rispondi in italiano "
+    "in modo chiaro, concreto e sintetico."
+)
+
+
+def build_vision_messages(
+    image_base64: str, prompt: str, media_type: str = "image/png"
+) -> list[dict]:
+    return [
+        {"role": "system", "content": VISION_SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt.strip()},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{media_type};base64,{image_base64.strip()}"
+                    },
+                },
+            ],
+        },
+    ]
+
+
 def build_chat_messages(prompt: str) -> list[dict[str, str]]:
     cleaned_prompt = prompt.strip()
     return [

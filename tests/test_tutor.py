@@ -11,6 +11,7 @@ from qwen_dev_tutor.tutor import (
     run_chat_async,
     run_code_tutor,
     run_code_tutor_async,
+    run_vision_async,
 )
 
 # ── fixtures ──────────────────────────────────────────────────────────────────
@@ -363,3 +364,39 @@ class TestRunCodeTutorAsync:
 
             with pytest.raises(QwenClientError, match="errore tutor async"):
                 await run_code_tutor_async("x = 1", config=fake_config)
+
+
+class TestRunVisionAsync:
+    """Tests for ``run_vision_async``."""
+
+    @pytest.mark.anyio
+    async def test_calls_client_achat_with_vision_messages(
+        self,
+        fake_config: AppConfig,
+        fake_chat_result: ChatResult,
+    ) -> None:
+        """run_vision_async calls ``client.achat()`` with vision messages."""
+        with mock.patch("qwen_dev_tutor.tutor.OpenAICompatibleClient") as mock_client:
+            instance = mock_client.return_value
+            instance.achat = mock.AsyncMock(return_value=fake_chat_result)
+            result = await run_vision_async(
+                image_base64="iVBORw0KGgo=",
+                prompt="Cosa vedi?",
+                config=fake_config,
+            )
+        assert result is fake_chat_result
+
+    @pytest.mark.anyio
+    async def test_propagates_client_error(self, fake_config: AppConfig) -> None:
+        """When client raises, run_vision_async propagates."""
+        with mock.patch("qwen_dev_tutor.tutor.OpenAICompatibleClient") as mock_client:
+            instance = mock_client.return_value
+            instance.achat = mock.AsyncMock(
+                side_effect=QwenClientError("vision error"),
+            )
+            with pytest.raises(QwenClientError, match="vision error"):
+                await run_vision_async(
+                    image_base64="iVBORw0KGgo=",
+                    prompt="test",
+                    config=fake_config,
+                )

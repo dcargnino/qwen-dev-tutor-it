@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from .client import QwenClientError
 from .config import ConfigError, get_config_issues, load_config
-from .tutor import run_chat_async, run_code_tutor_async
+from .tutor import run_chat_async, run_code_tutor_async, run_vision_async
 
 
 class ChatRequest(BaseModel):
@@ -16,6 +16,12 @@ class ChatRequest(BaseModel):
 class TutorRequest(BaseModel):
     code: str = Field(min_length=1, description="Snippet di codice da analizzare.")
     language_hint: str | None = Field(default=None, description="Hint opzionale sul linguaggio.")
+
+
+class VisionRequest(BaseModel):
+    image_base64: str = Field(min_length=1, description="Immagine codificata in base64.")
+    prompt: str = Field(min_length=1, description="Prompt per analizzare l'immagine.")
+    media_type: str = Field(default="image/png", description="Tipo MIME dell'immagine.")
 
 
 def create_app() -> FastAPI:
@@ -57,6 +63,27 @@ def create_app() -> FastAPI:
             result = await run_code_tutor_async(
                 request.code,
                 language_hint=request.language_hint,
+                config=config,
+            )
+        except ConfigError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except QwenClientError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+        return {
+            "provider": result.provider,
+            "model": result.model,
+            "response": result.content,
+        }
+
+    @app.post("/vision")
+    async def vision(request: VisionRequest) -> dict[str, str]:
+        try:
+            config = load_config()
+            result = await run_vision_async(
+                image_base64=request.image_base64,
+                prompt=request.prompt,
+                media_type=request.media_type,
                 config=config,
             )
         except ConfigError as exc:
@@ -183,6 +210,14 @@ def create_app() -> FastAPI:
           <button onclick="sendTutor()">Analizza snippet</button>
           <pre id="tutorResult">Nessuna analisi ancora.</pre>
         </article>
+        <article class="card">
+          <h2>Vision Analyzer</h2>
+          <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)" />
+          <img id="imagePreview" style="display:none;max-width:100%;margin:8px 0;border:1px solid var(--line);" />
+          <input id="visionPrompt" value="Descrivi questa immagine in italiano." />
+          <button onclick="sendVision()">Analizza immagine</button>
+          <pre id="visionResult">Nessuna analisi ancora.</pre>
+        </article>
       </section>
     </main>
     <script>
@@ -218,6 +253,39 @@ def create_app() -> FastAPI:
           body: JSON.stringify({ code, language_hint })
         });
         await handleResponse("tutorResult", response);
+      }
+
+      function previewImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById("imagePreview");
+          img.src = e.target.result;
+          img.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+
+      async function sendVision() {
+        const fileInput = document.getElementById("imageInput");
+        const file = fileInput.files[0];
+        if (!file) { alert("Seleziona un'immagine prima."); return; }
+        const prompt = document.getElementById("visionPrompt").value;
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+          const dataUrl = e.target.result;
+          const comma = dataUrl.indexOf(",");
+          const mediaType = dataUrl.substring(5, comma).split(";")[0];
+          const base64 = dataUrl.substring(comma + 1);
+          const response = await fetch("/vision", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image_base64: base64, prompt, media_type: mediaType })
+          });
+          await handleResponse("visionResult", response);
+        };
+        reader.readAsDataURL(file);
       }
     </script>
   </body>

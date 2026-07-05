@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from .client import ChatResult, OpenAICompatibleClient
 from .config import AppConfig, load_config
-from .prompts import build_chat_messages, build_tutor_messages
+from .prompts import build_chat_messages, build_tutor_messages, build_vision_messages
 
 
 def run_chat(prompt: str, config: AppConfig | None = None) -> ChatResult:
@@ -36,5 +36,20 @@ async def run_code_tutor_async(
     client = OpenAICompatibleClient(effective_config)
     return await client.achat(
         build_tutor_messages(code_snippet=code_snippet, language_hint=language_hint)
+    )
+
+
+async def run_vision_async(
+    image_base64: str,
+    prompt: str,
+    media_type: str = "image/png",
+    config: AppConfig | None = None,
+) -> ChatResult:
+    effective_config = config or load_config()
+    client = OpenAICompatibleClient(effective_config)
+    return await client.achat(
+        build_vision_messages(
+            image_base64=image_base64, prompt=prompt, media_type=media_type
+        )
     )
 

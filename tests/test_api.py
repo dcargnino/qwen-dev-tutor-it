@@ -216,3 +216,82 @@ class TestIndex:
         assert resp.headers["content-type"] == "text/html; charset=utf-8"
         assert "Qwen Dev Tutor IT" in resp.text
         assert "<h1>Qwen Dev Tutor IT</h1>" in resp.text
+
+
+class TestVision:
+    """POST /vision — multimodal image analysis."""
+
+    def test_success(self) -> None:
+        mock_config = mock.MagicMock()
+        with (
+            mock.patch("qwen_dev_tutor.api.load_config", return_value=mock_config),
+            mock.patch(
+                "qwen_dev_tutor.api.run_vision_async",
+                return_value=ChatResult(
+                    content="descrizione immagine",
+                    model="qwen-vl",
+                    provider="test",
+                    raw_response={},
+                ),
+            ),
+        ):
+            client = TestClient(create_app())
+            resp = client.post(
+                "/vision",
+                json={
+                    "image_base64": "iVBORw0KGgo=",
+                    "prompt": "Cosa vedi?",
+                    "media_type": "image/png",
+                },
+            )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["response"] == "descrizione immagine"
+        assert data["provider"] == "test"
+
+    def test_empty_image_returns_422(self) -> None:
+        client = TestClient(create_app())
+        resp = client.post("/vision", json={"image_base64": "", "prompt": "test"})
+        assert resp.status_code == 422
+
+    def test_empty_prompt_returns_422(self) -> None:
+        client = TestClient(create_app())
+        resp = client.post(
+            "/vision",
+            json={"image_base64": "iVBORw0KGgo=", "prompt": ""},
+        )
+        assert resp.status_code == 422
+
+    def test_config_error_returns_400(self) -> None:
+        with mock.patch(
+            "qwen_dev_tutor.api.load_config",
+            side_effect=ConfigError("QWEN_MODEL non configurato."),
+        ):
+            client = TestClient(create_app())
+            resp = client.post(
+                "/vision",
+                json={"image_base64": "iVBORw0KGgo=", "prompt": "test"},
+            )
+
+        assert resp.status_code == 400
+
+    def test_client_error_returns_502(self) -> None:
+        mock_config = mock.MagicMock()
+        with (
+            mock.patch(
+                "qwen_dev_tutor.api.load_config", return_value=mock_config
+            ),
+            mock.patch(
+                "qwen_dev_tutor.api.run_vision_async",
+                side_effect=QwenClientError("Errore HTTP dal provider: 401"),
+            ),
+        ):
+            client = TestClient(create_app())
+            resp = client.post(
+                "/vision",
+                json={"image_base64": "iVBORw0KGgo=", "prompt": "test"},
+            )
+
+        assert resp.status_code == 502
+        assert "Errore HTTP" in resp.json()["detail"]
