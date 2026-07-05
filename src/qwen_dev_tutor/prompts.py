@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 CHAT_SYSTEM_PROMPT = (
     "Sei Qwen, un assistente utile per sviluppatori. "
     "Rispondi in italiano in modo chiaro, concreto e sintetico."
