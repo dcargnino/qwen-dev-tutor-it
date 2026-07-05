@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from typing import Any
 
@@ -29,6 +31,13 @@ class OpenAICompatibleClient:
         if self.config.api_key:
             headers["Authorization"] = f"Bearer {self.config.api_key}"
         return headers
+
+    def _payload_stream(
+        self,
+        messages: list[dict[str, str]],
+        temperature: float = 0.2,
+    ) -> dict[str, Any]:
+        return self._payload(messages=messages, temperature=temperature) | {"stream": True}
 
     def _payload(
         self,
@@ -117,4 +126,39 @@ class OpenAICompatibleClient:
             raise QwenClientError("Il provider ha restituito una risposta non JSON.") from exc
 
         return self._extract_result(payload)
-
+    async def chat_stream_async(
+        self,
+        messages: list[dict[str, str]],
+        temperature: float = 0.2,
+    ) -> AsyncGenerator[str, None]:
+        """Stream tokens from the chat completion endpoint (SSE)."""
+        try:
+            async with httpx.AsyncClient(timeout=self.config.timeout_seconds) as client:
+                async with client.stream(
+                    "POST",
+                    self.config.chat_completions_url,
+                    headers=self._headers(),
+                    json=self._payload_stream(messages=messages, temperature=temperature),
+                ) as response:
+                    response.raise_for_status()
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data = line[6:]
+                            if data.strip() == "[DONE]":
+                                return
+                            try:
+                                chunk = json.loads(data)
+                                delta = chunk["choices"][0]["delta"].get("content", "")
+                                if delta:
+                                    yield delta
+                            except (KeyError, IndexError, json.JSONDecodeError):
+                                continue
+        except httpx.ConnectError as exc:
+            raise QwenClientError("Endpoint Qwen non raggiungibile.") from exc
+        except httpx.TimeoutException as exc:
+            raise QwenClientError("Richiesta a Qwen scaduta per timeout.") from exc
+        except httpx.HTTPStatusError as exc:
+            detail = exc.response.text.strip() or exc.response.reason_phrase
+            raise QwenClientError(f"Errore HTTP dal provider: {detail}") from exc
+        except httpx.RequestError as exc:
+            raise QwenClientError(f"Errore di rete verso il provider: {exc}") from exc

@@ -6,7 +6,12 @@ from pydantic import BaseModel, Field
 
 from .client import QwenClientError
 from .config import ConfigError, get_config_issues, load_config
-from .tutor import run_chat_async, run_code_tutor_async, run_vision_async
+from .tutor import (
+    run_chat_async,
+    run_chat_stream_async,
+    run_code_tutor_async,
+    run_vision_async,
+)
 
 
 class ChatRequest(BaseModel):
@@ -55,6 +60,32 @@ def create_app() -> FastAPI:
             "model": result.model,
             "response": result.content,
         }
+
+    @app.post("/chat/stream")
+    async def chat_stream(request: ChatRequest):
+        from fastapi.responses import StreamingResponse
+
+        try:
+            config = load_config()
+        except ConfigError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+        async def event_stream():
+            try:
+                async for token in run_chat_stream_async(request.prompt, config=config):
+                    yield f"data: {token}\n\n"
+                yield "data: [DONE]\n\n"
+            except QwenClientError as exc:
+                yield f"event: error\ndata: {exc}\n\n"
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            },
+        )
 
     @app.post("/tutor")
     async def tutor(request: TutorRequest) -> dict[str, str]:
@@ -108,151 +139,162 @@ def create_app() -> FastAPI:
     <title>Qwen Dev Tutor IT</title>
     <style>
       :root {
-        --bg: #f6f2e8;
-        --panel: #fffdf8;
-        --line: #d9cdb4;
-        --ink: #1b1a17;
-        --accent: #b9572f;
-        --accent-dark: #7d3418;
+        --bg: #f6f2e8; --panel: #fffdf8; --line: #d9cdb4;
+        --ink: #1b1a17; --accent: #b9572f; --accent-dark: #7d3418;
+        --spinner: #b9572f;
       }
-      body {
-        margin: 0;
-        font-family: Georgia, "Times New Roman", serif;
-        background:
-          radial-gradient(circle at top left, rgba(185, 87, 47, 0.15), transparent 30%),
-          linear-gradient(180deg, #f8f3ea 0%, #efe5d3 100%);
-        color: var(--ink);
+      [data-theme="dark"] {
+        --bg: #1a1814; --panel: #24211c; --line: #3d382f;
+        --ink: #e8dfd0; --accent: #d97a50; --accent-dark: #b9572f;
+        --spinner: #d97a50;
       }
-      main {
-        max-width: 960px;
-        margin: 0 auto;
-        padding: 32px 20px 56px;
-      }
-      h1, h2 {
-        margin: 0 0 12px;
-      }
-      .hero {
-        margin-bottom: 24px;
-        padding: 24px;
-        border: 1px solid var(--line);
-        background: rgba(255, 253, 248, 0.92);
-        box-shadow: 0 18px 40px rgba(77, 50, 27, 0.08);
-      }
-      .grid {
-        display: grid;
-        gap: 20px;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      }
-      .card {
-        padding: 20px;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        box-shadow: 0 14px 32px rgba(77, 50, 27, 0.06);
-      }
-      textarea, input, button {
-        width: 100%;
-        box-sizing: border-box;
-        font: inherit;
-      }
-      textarea, input {
-        margin: 12px 0;
-        padding: 12px;
-        border: 1px solid var(--line);
-        background: #fffefb;
-      }
-      textarea {
-        min-height: 180px;
-        resize: vertical;
-      }
-      button {
-        margin-top: 8px;
-        padding: 12px 14px;
-        border: 0;
-        background: var(--accent);
-        color: white;
-        cursor: pointer;
-      }
-      button:hover {
-        background: var(--accent-dark);
-      }
-      pre {
-        white-space: pre-wrap;
-        word-break: break-word;
-        padding: 14px;
-        background: #fffaf1;
-        border: 1px solid var(--line);
-      }
-      .meta {
-        font-size: 0.95rem;
-        color: #5d5141;
-      }
+      body { margin: 0; font-family: Georgia,"Times New Roman",serif;
+        background: var(--bg); color: var(--ink); transition: background .3s,color .3s; }
+      main { max-width: 960px; margin: 0 auto; padding: 32px 20px 56px; }
+      h1,h2 { margin: 0 0 12px; }
+      .hero { margin-bottom:24px; padding:24px; border:1px solid var(--line);
+        background:var(--panel); box-shadow:0 18px 40px rgba(77,50,27,.08); }
+      .grid { display:grid; gap:20px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
+      .card { padding:20px; background:var(--panel); border:1px solid var(--line); position:relative; }
+      textarea,input,button { width:100%; box-sizing:border-box; font:inherit; }
+      textarea,input { margin:12px 0; padding:12px; border:1px solid var(--line);
+        background:var(--panel); color:var(--ink); }
+      textarea { min-height:180px; resize:vertical; }
+      button { margin-top:8px; padding:12px 14px; border:0;
+        background:var(--accent); color:#fff; cursor:pointer; transition:background .2s; }
+      button:hover { background:var(--accent-dark); }
+      button:disabled { opacity:.5; cursor:not-allowed; }
+      pre { white-space:pre-wrap; word-break:break-word; padding:14px;
+        background:var(--panel); border:1px solid var(--line); position:relative; }
+      .meta { font-size:.95rem; color:#5d5141; }
+      .copy-btn { position:absolute; top:4px; right:4px; padding:4px 8px;
+        font-size:.75rem; background:var(--line); color:var(--ink);
+        border:none; cursor:pointer; border-radius:3px; }
+      .spinner { display:inline-block; width:16px; height:16px;
+        border:2px solid var(--line); border-top-color:var(--spinner);
+        border-radius:50%; animation:spin .6s linear infinite;
+        vertical-align:middle; margin-right:6px; }
+      @keyframes spin { to { transform:rotate(360deg); } }
+      .theme-toggle { position:fixed; top:12px; right:12px; padding:8px 12px;
+        font-size:.85rem; background:var(--panel); border:1px solid var(--line);
+        color:var(--ink); cursor:pointer; z-index:10; }
     </style>
   </head>
   <body>
+    <button class="theme-toggle" onclick="toggleTheme()">\u263E Tema</button>
     <main>
       <section class="hero">
         <h1>Qwen Dev Tutor IT</h1>
-        <p>MVP per testare Qwen in modalita' chat e developer tutoring, con endpoint OpenAI-compatible hosted o locali.</p>
-        <p class="meta">Configura `.env`, poi usa questa pagina per provare rapidamente il modello.</p>
+        <p>MVP per testare Qwen in chat e developer tutoring, con endpoint OpenAI-compatible hosted o locali.</p>
+        <p class="meta">Configura ".env", poi usa questa pagina per provare il modello.</p>
       </section>
       <section class="grid">
         <article class="card">
-          <h2>Chat testuale</h2>
+          <h2>Chat testuale <span style="font-size:.75rem;color:#888">(SSE)</span></h2>
           <input id="chatPrompt" value="Ciao, spiegami cos'e' FastAPI in italiano." />
-          <button onclick="sendChat()">Invia prompt</button>
-          <pre id="chatResult">Nessuna risposta ancora.</pre>
+          <button id="chatBtn" onclick="sendChatStream()">Invia prompt</button>
+          <pre id="chatResult">Nessuna risposta ancora.<button class="copy-btn" onclick="copyResult('chatResult')">Copia</button></pre>
         </article>
         <article class="card">
           <h2>Developer Tutor</h2>
           <textarea id="codeInput">def add(a: int, b: int) -> int:
     return a + b</textarea>
           <input id="languageHint" value="python" />
-          <button onclick="sendTutor()">Analizza snippet</button>
-          <pre id="tutorResult">Nessuna analisi ancora.</pre>
+          <button id="tutorBtn" onclick="sendTutor()">Analizza snippet</button>
+          <pre id="tutorResult">Nessuna analisi ancora.<button class="copy-btn" onclick="copyResult('tutorResult')">Copia</button></pre>
         </article>
         <article class="card">
           <h2>Vision Analyzer</h2>
           <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)" />
           <img id="imagePreview" style="display:none;max-width:100%;margin:8px 0;border:1px solid var(--line);" />
           <input id="visionPrompt" value="Descrivi questa immagine in italiano." />
-          <button onclick="sendVision()">Analizza immagine</button>
-          <pre id="visionResult">Nessuna analisi ancora.</pre>
+          <button id="visionBtn" onclick="sendVision()">Analizza immagine</button>
+          <pre id="visionResult">Nessuna analisi ancora.<button class="copy-btn" onclick="copyResult('visionResult')">Copia</button></pre>
         </article>
       </section>
     </main>
     <script>
-      async function handleResponse(targetId, response) {
-        const target = document.getElementById(targetId);
-        const payload = await response.json();
-        if (!response.ok) {
-          target.textContent = payload.detail || "Errore sconosciuto.";
-          return;
-        }
-        target.textContent =
-          "Provider: " + payload.provider + "\\n" +
-          "Model: " + payload.model + "\\n\\n" +
-          payload.response;
+      function toggleTheme() {
+        const html = document.documentElement;
+        const cur = html.getAttribute("data-theme");
+        html.setAttribute("data-theme", cur === "dark" ? "" : "dark");
+        localStorage.setItem("qwen-theme", html.getAttribute("data-theme"));
+      }
+      if (localStorage.getItem("qwen-theme") === "dark")
+        document.documentElement.setAttribute("data-theme", "dark");
+
+      function copyResult(id) {
+        const el = document.getElementById(id);
+        const txt = el.textContent.replace("Copia","").trim();
+        navigator.clipboard.writeText(txt).catch(function(){});
       }
 
-      async function sendChat() {
+      function setLoading(btnId, loading) {
+        const btn = document.getElementById(btnId);
+        btn.disabled = loading;
+        btn.innerHTML = loading ? '<span class="spinner"></span>Caricamento...' : (btn.dataset.orig || btn.textContent);
+      }
+
+      async function sendChatStream() {
         const prompt = document.getElementById("chatPrompt").value;
-        const response = await fetch("/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt })
-        });
-        await handleResponse("chatResult", response);
+        const target = document.getElementById("chatResult");
+        const btn = document.getElementById("chatBtn");
+        btn.dataset.orig = "Invia prompt";
+        setLoading("chatBtn", true);
+        target.textContent = "";
+
+        try {
+          const resp = await fetch("/chat/stream", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt })
+          });
+          if (!resp.ok) {
+            const err = await resp.json();
+            target.textContent = err.detail || "Errore sconosciuto.";
+            setLoading("chatBtn", false);
+            return;
+          }
+          const reader = resp.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const parts = buffer.split("\\n\\n");
+            buffer = parts.pop() || "";
+            for (const part of parts) {
+              if (part.startsWith("data: ")) {
+                const data = part.slice(6);
+                if (data === "[DONE]") continue;
+                target.textContent += data;
+              }
+            }
+          }
+        } catch (e) {
+          target.textContent = "Errore di connessione: " + e.message;
+        }
+        setLoading("chatBtn", false);
       }
 
       async function sendTutor() {
         const code = document.getElementById("codeInput").value;
         const language_hint = document.getElementById("languageHint").value || null;
-        const response = await fetch("/tutor", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code, language_hint })
-        });
-        await handleResponse("tutorResult", response);
+        const btn = document.getElementById("tutorBtn");
+        btn.dataset.orig = "Analizza snippet";
+        setLoading("tutorBtn", true);
+        try {
+          const resp = await fetch("/tutor", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code, language_hint })
+          });
+          const payload = await resp.json();
+          const target = document.getElementById("tutorResult");
+          if (!resp.ok) { target.textContent = payload.detail || "Errore."; return; }
+          target.textContent = "Provider: " + payload.provider + "\\nModel: " + payload.model + "\\n\\n" + payload.response;
+        } finally { setLoading("tutorBtn", false); }
       }
 
       function previewImage(event) {
@@ -260,37 +302,43 @@ def create_app() -> FastAPI:
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
-          const img = document.getElementById("imagePreview");
-          img.src = e.target.result;
-          img.style.display = "block";
+          document.getElementById("imagePreview").src = e.target.result;
+          document.getElementById("imagePreview").style.display = "block";
         };
         reader.readAsDataURL(file);
       }
 
       async function sendVision() {
-        const fileInput = document.getElementById("imageInput");
-        const file = fileInput.files[0];
-        if (!file) { alert("Seleziona un'immagine prima."); return; }
+        const file = document.getElementById("imageInput").files[0];
+        if (!file) { alert("Seleziona un'immagine."); return; }
         const prompt = document.getElementById("visionPrompt").value;
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          const dataUrl = e.target.result;
-          const comma = dataUrl.indexOf(",");
-          const mediaType = dataUrl.substring(5, comma).split(";")[0];
-          const base64 = dataUrl.substring(comma + 1);
-          const response = await fetch("/vision", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ image_base64: base64, prompt, media_type: mediaType })
-          });
-          await handleResponse("visionResult", response);
-        };
-        reader.readAsDataURL(file);
+        const btn = document.getElementById("visionBtn");
+        btn.dataset.orig = "Analizza immagine";
+        setLoading("visionBtn", true);
+        try {
+          const reader = new FileReader();
+          reader.onload = async function(e) {
+            const dataUrl = e.target.result;
+            const comma = dataUrl.indexOf(",");
+            const mediaType = dataUrl.substring(5, comma).split(";")[0];
+            const base64 = dataUrl.substring(comma + 1);
+            const resp = await fetch("/vision", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ image_base64: base64, prompt, media_type: mediaType })
+            });
+            const payload = await resp.json();
+            const target = document.getElementById("visionResult");
+            if (!resp.ok) { target.textContent = payload.detail || "Errore."; return; }
+            target.textContent = "Provider: " + payload.provider + "\\nModel: " + payload.model + "\\n\\n" + payload.response;
+          };
+          reader.readAsDataURL(file);
+        } finally { setLoading("visionBtn", false); }
       }
     </script>
   </body>
 </html>
-        """
+                """
 
     return app
 

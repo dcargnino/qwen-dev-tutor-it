@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from unittest import mock
 
 from fastapi.testclient import TestClient
@@ -295,3 +296,70 @@ class TestVision:
 
         assert resp.status_code == 502
         assert "Errore HTTP" in resp.json()["detail"]
+
+
+class TestChatStream:
+    """POST /chat/stream — SSE streaming."""
+
+    def test_streams_tokens(self) -> None:
+        async def fake_stream() -> AsyncGenerator[str, None]:
+            for t in ["Ciao", " ", "mondo"]:
+                yield t
+
+        mock_config = mock.MagicMock()
+        with (
+            mock.patch("qwen_dev_tutor.api.load_config", return_value=mock_config),
+            mock.patch(
+                "qwen_dev_tutor.api.run_chat_stream_async",
+                return_value=fake_stream(),
+            ),
+        ):
+            client = TestClient(create_app())
+            resp = client.post(
+                "/chat/stream",
+                json={"prompt": "test"},
+            )
+
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "text/event-stream; charset=utf-8"
+        body = resp.text
+        assert "data: Ciao" in body
+        assert "data: [DONE]" in body
+
+    def test_returns_400_on_config_error(self) -> None:
+        with mock.patch(
+            "qwen_dev_tutor.api.load_config",
+            side_effect=ConfigError("bad config"),
+        ):
+            client = TestClient(create_app())
+            resp = client.post(
+                "/chat/stream",
+                json={"prompt": "test"},
+            )
+        assert resp.status_code == 400
+
+
+class TestIndexEnhanced:
+    """GET / — landing page with enhanced UI."""
+
+    def test_contains_sse_badge(self) -> None:
+        client = TestClient(create_app())
+        resp = client.get("/")
+        assert "(SSE)" in resp.text
+
+    def test_contains_dark_mode_toggle(self) -> None:
+        client = TestClient(create_app())
+        resp = client.get("/")
+        assert "toggleTheme" in resp.text
+        assert "\u263E Tema" in resp.text
+
+    def test_contains_copy_buttons(self) -> None:
+        client = TestClient(create_app())
+        resp = client.get("/")
+        assert "copyResult" in resp.text
+
+    def test_contains_loading_spinner(self) -> None:
+        client = TestClient(create_app())
+        resp = client.get("/")
+        assert "spinner" in resp.text
+        assert "setLoading" in resp.text

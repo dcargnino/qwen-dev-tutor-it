@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
+
 from .client import ChatResult, OpenAICompatibleClient
 from .config import AppConfig, load_config
 from .prompts import build_chat_messages, build_tutor_messages, build_vision_messages
@@ -52,4 +54,12 @@ async def run_vision_async(
             image_base64=image_base64, prompt=prompt, media_type=media_type
         )
     )
-
+async def run_chat_stream_async(
+    prompt: str,
+    config: AppConfig | None = None,
+) -> AsyncGenerator[str, None]:
+    """Stream tokens from a chat prompt."""
+    effective_config = config or load_config()
+    client = OpenAICompatibleClient(effective_config)
+    async for token in client.chat_stream_async(build_chat_messages(prompt)):
+        yield token
