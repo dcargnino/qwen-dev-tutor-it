@@ -13,7 +13,7 @@
 
 </div>
 
-![Qwen model offering](assets/Qwen3.7-Max-June22.png)
+![Qwen model offering](assets/Qwen-Dev-Tutor-IT.png)
 
  — a practical, open-source MVP for workshops, community meetups, and technical storytelling.
 

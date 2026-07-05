@@ -13,7 +13,7 @@
 
 </div>
 
-![Qwen model offering](assets/Qwen3.7-Max-June22.png)
+![Qwen model offering](assets/Qwen-Dev-Tutor-IT.png)
 
  — 一个为工作坊、社区聚会和技术分享设计的实用开源 MVP。
 
