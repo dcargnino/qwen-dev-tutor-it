@@ -31,6 +31,9 @@ docker-stop:
 docker-logs:
 	docker compose logs -f
 
+demo:
+	bash exercises/demo.sh
+
 clean:
 	rm -rf .venv/ .pytest_cache/ __pycache__/
 	find . -name '*.pyc' -delete

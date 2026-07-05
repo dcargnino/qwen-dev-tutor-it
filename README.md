@@ -1,8 +1,26 @@
+<div align="center">
+
 # Qwen Dev Tutor IT
+
+[![Python](https://img.shields.io/badge/python-3.11%20|%203.12%20|%203.13-blue?logo=python)](https://python.org)
+[![Tests](https://img.shields.io/badge/tests-104%20passed-green?logo=pytest)](https://github.com/dcargnino/qwen-dev-tutor-it/actions)
+[![Ruff](https://img.shields.io/badge/ruff-0%20errors-brightgreen?logo=ruff)](https://github.com/astral-sh/ruff)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/dcargnino/qwen-dev-tutor-it)](https://github.com/dcargnino/qwen-dev-tutor-it/commits/main)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](.github/pull_request_template.md)
 
 > **Bring Qwen into Italian developer education** — a practical, open-source MVP for workshops, community meetups, and technical storytelling.
 
+</div>
+
 ![Qwen model offering](assets/Qwen3.7-Max-June22.png)
+
+ — a practical, open-source MVP for workshops, community meetups, and technical storytelling.
+
+
+
+
+[🇮🇹 Italiano](README.it.md) · [🇨🇳 中文](README.zh-cn.md)
 
 ---
 
