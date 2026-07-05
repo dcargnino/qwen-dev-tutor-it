@@ -7,7 +7,8 @@ import pytest
 
 from qwen_dev_tutor.cli import main
 from qwen_dev_tutor.client import ChatResult, QwenClientError
-from qwen_dev_tutor.config import ConfigError
+from qwen_dev_tutor.config import AppConfig, ConfigError
+from qwen_dev_tutor.models import ModelEntry
 
 
 @pytest.fixture
@@ -172,3 +173,66 @@ class TestArgparseErrors:
         with pytest.raises(SystemExit) as excinfo:
             main(argv=["chat"])
         assert excinfo.value.code == 2
+
+
+class TestCompareSubcommand:
+    """``compare`` subcommand — multi-model benchmarking."""
+
+    def test_requires_models_or_yaml(self) -> None:
+        """Without --models or --from-yaml, compare returns exit code 1."""
+        rc = main(["compare", "test prompt"])
+        assert rc == 1
+
+    def test_with_models_flag(self) -> None:
+        """--models runs run_chat for each named model."""
+        with mock.patch("qwen_dev_tutor.cli.run_chat") as mock_run:
+            mock_run.return_value = ChatResult(
+                content="ok", model="qwen-test",
+                provider="test", raw_response={},
+            )
+            with mock.patch("qwen_dev_tutor.cli.load_config") as mock_load:
+                mock_load.return_value = AppConfig(
+                    provider="test", api_key="k",
+                    base_url="http://x", model="m",
+                )
+                rc = main(["compare", "test prompt", "--models", "m1,m2"])
+
+        assert rc == 0
+        assert mock_run.call_count == 2
+
+    def test_with_yaml(self) -> None:
+        """--from-yaml loads models from a YAML file."""
+        with mock.patch("qwen_dev_tutor.cli.load_models_config") as mock_load:
+            mock_load.return_value = [
+                ModelEntry(name="m1", provider="p1", base_url="http://a", model="qwen-a"),
+            ]
+            with mock.patch("qwen_dev_tutor.cli.resolve_config_from_entry") as mock_resolve:
+                mock_resolve.return_value = {"QWEN_PROVIDER": "p1"}
+                with mock.patch("qwen_dev_tutor.cli.run_chat") as mock_run:
+                    mock_run.return_value = ChatResult(
+                        content="ok", model="qwen-a",
+                        provider="p1", raw_response={},
+                    )
+                    with mock.patch("qwen_dev_tutor.cli.load_config") as mock_lc:
+                        mock_lc.return_value = AppConfig(
+                            provider="t", api_key="k",
+                            base_url="http://x", model="m",
+                        )
+                        rc = main(["compare", "test", "--from-yaml", "/tmp/f.yaml"])
+
+        assert rc == 0
+        mock_run.assert_called_once()
+
+    def test_reports_errors(self) -> None:
+        """When a model fails, the error is reported and exit code is 1."""
+        with mock.patch("qwen_dev_tutor.cli.run_chat") as mock_run:
+            mock_run.side_effect = QwenClientError("fail")
+            with mock.patch("qwen_dev_tutor.cli.load_config") as mock_load:
+                mock_load.return_value = AppConfig(
+                    provider="t", api_key="k",
+                    base_url="http://x", model="m",
+                )
+                rc = main(["compare", "test", "--models", "bad-model"])
+
+        assert rc == 1
+        mock_run.assert_called_once()
