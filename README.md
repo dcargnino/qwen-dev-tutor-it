@@ -1,162 +1,177 @@
-# qwen-dev-tutor-it
+# Qwen Dev Tutor IT
 
-```text
-   ____                         ____              ______      __
-  / __ \__      _____  ____    / __ \___ _   __  /_  __/_  __/ /_____  _____
- / / / /\ \ /\ / / _ \/ __ \  / / / / _ \ | / /   / / / / / / __/ __ \/ ___/
-/ /_/ /  \ V  V /  __/ / / / / /_/ /  __/ |/ /   / / / /_/ / /_/ /_/ / /
-\___\_\   \_/\_/ \___/_/ /_/  \____/\___/|___/   /_/  \__,_/\__/\____/_/
-```
-
-> Un progetto open-source per portare Qwen dentro la developer education italiana con un approccio pratico, accessibile e pronto per workshop, community meetup e storytelling tecnico.
+> **Bring Qwen into Italian developer education** — a practical, open-source MVP for workshops, community meetups, and technical storytelling.
 
 ![Qwen model offering](assets/Qwen3.7-Max-June22.png)
 
-> Una panoramica visiva dell'offerta Qwen, utile per contestualizzare la varietà della famiglia di modelli e il potenziale del progetto.
+---
 
-## Che cos'e' Qwen
+## Why This Project Matters
 
-Qwen non e' un solo modello.
-E' una **famiglia di modelli AI** sviluppata dal team Qwen di Alibaba Cloud, con una gamma che comprende:
+Many AI projects show that a model "can answer." This project shows something more interesting:
 
-- **LLM general-purpose** per chat, ragionamento, scrittura e task generali;
-- **modelli per coding** pensati per spiegazione, generazione e revisione di codice;
-- **modelli multimodali** orientati a immagini, audio e interazioni piu' ricche;
-- **varianti hosted via API** e **release open-source** che la community puo' studiare, provare e integrare.
+**how Qwen can be presented, taught, and adopted in a developer-first context.**
 
-Questo punto e' centrale per il progetto.
+Qwen is not a single model — it's a **family of AI models** from Alibaba Cloud's Qwen team, spanning:
 
-`qwen-dev-tutor-it` non nasce solo per "fare una chat con un modello".
-Nasce per valorizzare il fatto che **Qwen e' un ecosistema ampio, pratico e in parte apertamente disponibile**, quindi adatto sia a demo rapide sia a percorsi piu' profondi di studio, sperimentazione e community building.
+- **General-purpose LLMs** for chat, reasoning, writing
+- **Coding models** for explanation, generation, and review
+- **Multimodal models** (vision, audio) for richer interactions
+- **API-hosted** and **open-source** releases
 
-## Visione
+Qwen Dev Tutor IT is designed to **bridge the gap** between models and the people who want to actually use them — developers, educators, community builders, and makers.
 
-`qwen-dev-tutor-it` non nasce per essere soltanto una demo.
+---
 
-Nasce per diventare un **ponte**:
+## Features
 
-- tra modelli e persone che vogliono davvero usarli;
-- tra AI e developer education;
-- tra sperimentazione personale e contenuti utili per la community;
-- tra una semplice prova tecnica e un progetto che puo' crescere in workshop, tutorial, talk e iniziative ambassador.
+| Area | Capability |
+|---|---|
+| 💬 **Text Chat** | Interactive Q&A with Qwen in Italian |
+| 🧑‍💻 **Developer Tutor** | Paste code → get explanation, improvements, and a unit test |
+| 👁️ **Vision Analyzer** | Upload an image → Qwen describes and analyzes it |
+| 📊 **Model Comparison** | Compare multiple Qwen models side-by-side on the same prompt |
+| 🖥️ **CLI** | `chat`, `code-review`, `compare` commands |
+| 🌐 **API** | FastAPI with `/chat`, `/tutor`, `/vision`, `/chat/stream` endpoints |
+| 🎨 **Web UI** | Rich interface with SSE streaming, dark mode, and copy-to-clipboard |
+| 🔌 **Provider-agnostic** | Works with any OpenAI-compatible endpoint (hosted or local) |
+| 🐳 **Docker** | Ready-to-deploy Dockerfile + docker-compose |
 
-L'idea e' semplice ma forte:
+---
 
-**prendere Qwen e trasformarlo in uno strumento che aiuti sviluppatori a capire meglio il codice, imparare, confrontare modelli e immaginare nuovi workflow.**
+## Quick Start
 
-## Perche' questo progetto conta
+### Prerequisites
 
-Molti progetti AI mostrano che un modello "puo' rispondere".
+- Python 3.11+
+- An OpenAI-compatible endpoint (Alibaba Model Studio, Ollama, vLLM, LM Studio...)
 
-Questo progetto vuole mostrare qualcosa di piu' interessante:
+### Install
 
-**come Qwen puo' essere presentato, insegnato e adottato in un contesto developer-first.**
+```bash
+# Clone the repo
+git clone https://github.com/dcargnino/qwen-dev-tutor-it.git
+cd qwen-dev-tutor-it
 
-E proprio perche' Qwen include **modelli di tipologie diverse** e una forte componente **open-source**, il progetto puo' diventare una base molto credibile per:
+# Create venv and install
+uv venv --python 3.12
+uv pip install -e ".[dev]"
 
-- spiegare la differenza tra modelli generalisti, coder e multimodali;
-- mostrare cosa significa usare un modello hosted rispetto a uno eseguibile localmente;
-- aiutare la community a sperimentare non solo con "un LLM", ma con un'intera famiglia di modelli.
-
-Significa costruire qualcosa che sia:
-
-- abbastanza semplice da essere capito in pochi minuti;
-- abbastanza concreto da essere usato in una demo live;
-- abbastanza pulito da essere esteso senza ripartire da zero;
-- abbastanza ispirazionale da accendere idee in chi partecipa a un workshop o scopre il progetto su GitHub.
-
-## La storia che racconta
-
-Il messaggio centrale del repository e' questo:
-
-```text
-stesso progetto
-stessi prompt
-stessa esperienza
-
-Qwen hosted oppure Qwen locale
-
-senza cambiare il cuore dell'app
+# Configure your endpoint
+cp .env.example .env
+# Edit .env with your API key, base URL, and model
 ```
 
-Questa scelta architetturale e' anche una scelta narrativa.
+### Configuration
 
-Rende il progetto utile per:
+Create a `.env` file:
 
-- mostrare Alibaba Model Studio in modo pratico;
-- abbassare la soglia d'ingresso con setup locali;
-- confrontare modelli e deployment in un linguaggio comprensibile alla community;
-- far vedere che Qwen puo' vivere sia in ambienti managed sia in percorsi piu' maker-oriented.
-
-Ma soprattutto rende visibile una caratteristica molto forte di Qwen:
-
-```text
-una sola famiglia
-piu' tipi di modelli
-piu' modi di adozione
-piu' spazio per la community
+```env
+QWEN_PROVIDER=alibaba-model-studio
+QWEN_API_KEY=your-api-key-here
+QWEN_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode
+QWEN_MODEL=qwen3.6-flash
+QWEN_TIMEOUT_SECONDS=60
+QWEN_ALLOW_EMPTY_API_KEY=false
 ```
 
-## Il cuore dell'MVP
+For local setups (Ollama, vLLM, LM Studio):
 
-Il progetto parte da un caso d'uso simbolico e fortemente community-friendly:
-
-### Developer Tutor
-
-Uno sviluppatore incolla uno snippet.
-Qwen risponde in italiano con:
-
-1. spiegazione del codice;
-2. suggerimenti di miglioramento;
-3. proposta di un test unitario semplice.
-
-In altre parole:
-
-```text
-codice grezzo
-    |
-    v
-Qwen lo rende comprensibile
-    |
-    v
-apprendimento, miglioramento, discussione
+```env
+QWEN_PROVIDER=ollama-local
+QWEN_API_KEY=local-demo-key
+QWEN_BASE_URL=http://localhost:11434
+QWEN_MODEL=qwen2.5-coder:7b
+QWEN_ALLOW_EMPTY_API_KEY=true
 ```
 
-Questo e' il tipo di interazione che funziona bene in:
+---
 
-- workshop hands-on;
-- tutorial registrati;
-- mini demo durante meetup;
-- contenuti educativi per chi vuole capire il valore di un coding assistant.
+## Usage
 
-## Cosa dimostra oggi
+### CLI
 
-- chat testuale con Qwen in italiano;
-- developer tutor semplice e leggibile;
-- API FastAPI minima;
-- UI web minimale per test veloci;
-- CLI per prompt e code review;
-- prompt separati dalla logica applicativa;
-- configurazione unica per hosted e local;
-- esercizi documentati per apprendimento, confronto e demo.
+```bash
+# Text chat
+python -m qwen_dev_tutor chat "Explain FastAPI in Italian"
 
-## Cosa puo' diventare domani
+# Code review
+python -m qwen_dev_tutor code-review examples/simple_function.py
 
-`qwen-dev-tutor-it` e' pensato come base per una famiglia di esperienze community-centric:
+# Model comparison
+python -m qwen_dev_tutor compare "What is FastAPI?" --models qwen3.6-flash,qwen3-coder-flash
 
-- laboratori introduttivi su Qwen;
-- workshop su prompt design per sviluppatori;
-- confronti tra modelli Qwen diversi;
-- demo multimodali con vision;
-- scenari audio/speech;
-- workflow agentici leggeri su piccoli repository;
-- materiale pratico per ambassador activity, talk e community enablement.
+# Compare from YAML config
+python -m qwen_dev_tutor compare "Explain Python decorators" --from-yaml config/models.example.yaml
+```
 
-## Architettura in un colpo d'occhio
+### API Server
+
+```bash
+uvicorn qwen_dev_tutor.api:app --reload --host 0.0.0.0 --port 8000
+```
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/health` | GET | Configuration status |
+| `/chat` | POST | Text chat |
+| `/chat/stream` | POST | SSE streaming chat |
+| `/tutor` | POST | Code analysis |
+| `/vision` | POST | Image analysis (base64) |
+| `/` | GET | Web UI |
+
+### Docker
+
+```bash
+docker compose up -d
+```
+
+---
+
+## Project Structure
+
+```
+qwen-dev-tutor-it/
+  README.md              # This file
+  .env.example           # Environment template
+  pyproject.toml         # Project config + dependencies
+  Makefile               # Common targets (test, lint, run, docker)
+  Dockerfile             # Multi-stage Docker build
+  docker-compose.yml     # Quick deployment
+  config/
+    models.example.yaml  # Multi-model YAML configuration
+  exercises/
+    01_text_chat.md      # Text chat exercise
+    02_code_explanation.md    # Code explanation exercise
+    03_model_comparison.md    # Model comparison exercise
+    04_vision.md          # Vision analysis exercise
+    05_audio.md           # Audio transcription exercise
+    06_agentic_workflow.md    # Agentic workflow exercise
+  src/qwen_dev_tutor/
+    config.py            # Runtime configuration
+    client.py            # OpenAI-compatible HTTP client
+    prompts.py           # System prompts and message builders
+    tutor.py             # Business logic (chat, tutor, vision)
+    models.py            # Multi-model YAML loader
+    api.py               # FastAPI application + web UI
+    cli.py               # CLI entry point
+  tests/
+    test_config.py       # 13 tests
+    test_client.py       # 22 tests
+    test_prompts.py      # 4 tests
+    test_tutor.py        # 22 tests
+    test_cli.py          # 15 tests
+    test_api.py          # 22 tests
+    test_models.py       # 9 tests
+```
+
+---
+
+## Architecture
 
 ```text
                          +----------------------+
-                         |      Utente          |
+                         |       User           |
                          | dev / tutor / maker  |
                          +----------+-----------+
                                     |
@@ -164,15 +179,16 @@ Questo e' il tipo di interazione che funziona bene in:
              |                                             |
              v                                             v
    +---------------------+                      +---------------------+
-   | UI web minimale     |                      | CLI                 |
-   | chat + code tutor   |                      | chat / code-review  |
+   | Web UI              |                      | CLI                 |
+   | chat / tutor /      |                      | chat / code-review  |
+   | vision (SSE stream) |                      | compare             |
    +----------+----------+                      +----------+----------+
               \                                         /
                \                                       /
                 v                                     v
                  +-----------------------------------+
                  | qwen_dev_tutor                    |
-                 | config + prompts + tutor + client |
+                 | config + prompts + client + tutor |
                  +----------------+------------------+
                                   |
                                   v
@@ -184,278 +200,73 @@ Questo e' il tipo di interazione che funziona bene in:
           |                        |                       |
           v                        v                       v
 +------------------+   +---------------------+   +--------------------+
-| Alibaba Model    |   | Ollama / vLLM /     |   | Altri endpoint     |
-| Studio           |   | LM Studio locali    |   | compatibili        |
+| Alibaba Model    |   | Ollama / vLLM /     |   | Other compatible   |
+| Studio           |   | LM Studio (local)    |   | endpoints          |
 +------------------+   +---------------------+   +--------------------+
 ```
 
-## Due modalita', una sola esperienza
+---
 
-### 1. Qwen hosted
+## Exercises
 
-Uso di endpoint OpenAI-compatible, inclusa la compatibilita' con Alibaba Model Studio.
+The `exercises/` folder is the seed of a complete learning path:
 
-### 2. Qwen locale
+1. **Text Chat** — basic interaction with Qwen
+2. **Code Explanation** — developer tutor workflow
+3. **Model Comparison** — compare different Qwen models
+4. **Vision Analyzer** — multimodal image analysis
+5. **Audio & Speech** — transcription and analysis (STT + Qwen)
+6. **Agentic Workflow** — repo analysis and issue generation
 
-Uso di modelli Qwen esposti localmente tramite server OpenAI-compatible, per esempio:
+---
 
-- Ollama
-- vLLM
-- LM Studio
-- altri endpoint compatibili con `/v1/chat/completions`
-
-Il punto non e' solo tecnico.
-Il punto e' che questo rende il progetto adatto sia a contesti enterprise-friendly sia a community piu' sperimentali.
-
-Ed e' qui che il lato open-source di Qwen conta davvero: permette di immaginare un percorso che va dalla semplice API demo fino alla sperimentazione locale, al confronto tra varianti del modello e alla costruzione di workflow condivisibili dalla community.
-
-## Perche' si presta bene a iniziative Ambassador e community
-
-Perche' tiene insieme quattro dimensioni che raramente convivono bene nello stesso repository:
-
-- **accessibilita'**: si spiega facilmente anche a chi non conosce ancora Qwen;
-- **utilita'**: mostra un flusso che interessa davvero chi sviluppa;
-- **estendibilita'**: apre la strada a vision, audio, agent e benchmark leggeri;
-- **community leverage**: e' perfetto per meetup, live coding, tutorial e contenuti educational.
-
-Un buon progetto ambassador non deve essere solo potente.
-Deve essere anche **adottabile, raccontabile e riusabile**.
-
-Questo e' esattamente il tipo di spazio che `qwen-dev-tutor-it` vuole occupare.
-
-## Who is this for?
-
-Questo progetto e' pensato per persone e contesti diversi, ma con un punto in comune: la voglia di usare Qwen non come curiosita' astratta, ma come strumento concreto di apprendimento, sperimentazione e condivisione.
-
-### Developer
-
-Per chi vuole:
-
-- provare Qwen su task reali legati al codice;
-- confrontare facilmente setup hosted e locali;
-- partire da una base semplice invece di un framework pesante;
-- esplorare prompt e workflow utili per coding assistance.
-
-### Educator e workshop creator
-
-Per chi organizza:
-
-- workshop introduttivi;
-- laboratori hands-on;
-- sessioni community;
-- contenuti educativi per sviluppatori.
-
-Il progetto offre un caso d'uso immediato, facilmente spiegabile e abbastanza compatto da essere portato in aula, in live demo o in un meetup.
-
-### Community builder e Ambassador
-
-Per chi vuole costruire attorno a Qwen:
-
-- storytelling tecnico chiaro;
-- demo replicabili;
-- esempi open-source facili da condividere;
-- percorsi progressivi che partono da chat e coding e possono crescere verso vision, audio e agentic workflows.
-
-### Maker e sperimentatori
-
-Per chi preferisce imparare provando:
-
-- cambiando modello;
-- cambiando endpoint;
-- confrontando risposte;
-- trasformando piccoli esercizi in esperimenti piu' ricchi.
-
-In breve:
+## Roadmap
 
 ```text
-se vuoi spiegare Qwen,
-provare Qwen,
-insegnare Qwen,
-o costruire attorno a Qwen,
-questo progetto e' pensato per te.
+Today
+  |-- Text chat in Italian
+  |-- Developer tutor (code → explanation + tests)
+  |-- Vision analyzer
+  |-- CLI + API + Web UI
+  |-- Model comparison
+  |-- Docker + CI
+  v
+Tomorrow
+  |-- Streaming improvements (tutor + vision SSE)
+  |-- Benchmark metrics
+  |-- Workshop toolkit
+  |-- Community sessions material
 ```
 
-## Esperienza d'uso
+---
 
-### Chat testuale
+## Who Is This For
 
-Una richiesta semplice per verificare rapidamente:
+- **Developers** wanting to try Qwen on real coding tasks
+- **Educators & workshop creators** needing hands-on material
+- **Community builders & ambassadors** building around Qwen
+- **Makers & experimenters** exploring model comparisons
 
-- qualita' della risposta;
-- uso dell'italiano;
-- tono;
-- velocita' percepita.
+---
 
-### Developer Tutor
-
-Il caso d'uso piu' forte per developer education:
-
-- spiega codice;
-- suggerisce miglioramenti;
-- propone un test;
-- crea una base di discussione tecnica.
-
-### Esercizi guidati
-
-La cartella `exercises/` non e' un accessorio.
-E' il seme di un percorso didattico.
-
-Include:
-
-- `01_text_chat.md`
-- `02_code_explanation.md`
-- `03_model_comparison.md`
-- `04_vision_placeholder.md`
-- `05_audio_placeholder.md`
-- `06_agentic_workflow_placeholder.md`
-
-Ogni esercizio aiuta a trasformare il repository da semplice MVP a strumento per attivare conversazioni, prove pratiche e nuove iterazioni.
-
-## Setup e configurazione
-
-### Setup rapido
+## Development
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -e .[dev]
-copy .env.example .env
+# Run tests
+make test          # or: .venv/bin/python -m pytest tests/ -v
+
+# Lint
+make lint          # or: .venv/bin/ruff check src/qwen_dev_tutor/ tests/
+
+# Format
+make lint-fix
+
+# Run locally
+make run
 ```
 
-### Variabili principali
+---
 
-- `QWEN_PROVIDER`
-- `QWEN_API_KEY`
-- `QWEN_BASE_URL`
-- `QWEN_MODEL`
+## License
 
-Variabili opzionali:
-
-- `QWEN_TIMEOUT_SECONDS`
-- `QWEN_ALLOW_EMPTY_API_KEY`
-
-### Esempio Alibaba Model Studio
-
-```env
-QWEN_PROVIDER=alibaba-model-studio
-QWEN_API_KEY=your-model-studio-key
-QWEN_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode
-QWEN_MODEL=qwen-plus
-QWEN_ALLOW_EMPTY_API_KEY=false
-```
-
-### Esempio Qwen locale
-
-```env
-QWEN_PROVIDER=ollama-local
-QWEN_API_KEY=local-demo-key
-QWEN_BASE_URL=http://localhost:11434
-QWEN_MODEL=qwen2.5-coder:7b
-QWEN_ALLOW_EMPTY_API_KEY=true
-```
-
-## Esempi di utilizzo
-
-### CLI
-
-```bash
-python -m qwen_dev_tutor chat "Ciao, spiegami cos'e' FastAPI"
-python -m qwen_dev_tutor code-review examples/simple_function.py
-```
-
-### API
-
-- `GET /health`
-- `POST /chat`
-- `POST /tutor`
-- `GET /`
-
-### Esempio `POST /chat`
-
-```bash
-curl -X POST http://127.0.0.1:8000/chat ^
-  -H "Content-Type: application/json" ^
-  -d "{\"prompt\":\"Spiegami FastAPI in italiano\"}"
-```
-
-### Esempio `POST /tutor`
-
-```bash
-curl -X POST http://127.0.0.1:8000/tutor ^
-  -H "Content-Type: application/json" ^
-  -d "{\"code\":\"def add(a, b):\n    return a + b\"}"
-```
-
-## Struttura repository
-
-```text
-qwen-dev-tutor-it/
-  README.md
-  .env.example
-  pyproject.toml
-  config/
-    models.example.yaml
-  exercises/
-    01_text_chat.md
-    02_code_explanation.md
-    03_model_comparison.md
-    04_vision_placeholder.md
-    05_audio_placeholder.md
-    06_agentic_workflow_placeholder.md
-  examples/
-    simple_function.py
-  src/
-    qwen_dev_tutor/
-      __init__.py
-      __main__.py
-      api.py
-      cli.py
-      client.py
-      config.py
-      prompts.py
-      tutor.py
-  tests/
-    test_config.py
-    test_prompts.py
-```
-
-## Mappa del codice
-
-| File | Ruolo |
-|---|---|
-| `config.py` | legge la configurazione runtime |
-| `client.py` | parla con endpoint OpenAI-compatible |
-| `prompts.py` | contiene i prompt del progetto |
-| `tutor.py` | collega prompt e client |
-| `api.py` | espone API e pagina web minima |
-| `cli.py` | espone i comandi da terminale |
-
-## Roadmap vision-driven
-
-```text
-oggi
-|
-|-- text chat in italiano
-|-- developer tutor
-|-- CLI + API minima
-|-- exercises per workshop
-|
-v
-domani
-|-- vision workflow
-|-- audio and speech
-|-- model comparison piu' strutturato
-|-- benchmark leggeri
-|-- agentic workflows su mini repo
-|-- toolkit per workshop e community sessions
-```
-
-## Perche' qwen-dev-tutor-it
-
-Perche' ha il giusto equilibrio tra ambizione e pragmatismo.
-
-Non promette troppo.
-Non prova a essere tutto.
-Ma apre una direzione chiara:
-
-**rendere Qwen piu' vicino alla pratica quotidiana di chi sviluppa, insegna, condivide e costruisce community.**
+MIT — see [LICENSE](LICENSE) for details.
